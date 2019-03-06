@@ -46,7 +46,7 @@ public class Test {
                 } else {
                     System.out.println("Found " + error.size() + " error(s) in your file.\n");
                     for (checker.Error error1 : error) {
-                        System.out.println(error1.getMissingContent() != null ? error1.toString() : error1.toString(true));
+                        System.out.println(error1.toString());
                         System.out.println("");
                     }
                 }

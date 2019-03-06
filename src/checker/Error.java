@@ -10,18 +10,14 @@ package checker;
  * @author Thien Phuc
  */
 public class Error {
-    private String thisContent, missingContent;
+    private String thisContent;
     private int rowNumber;
+    private boolean isClose;
 
-    public Error(String thisContent, String missingContent, int rowNumber) {
+    public Error(String thisContent, int rowNumber, boolean isClose) {
         this.thisContent = thisContent;
-        this.missingContent = missingContent;
         this.rowNumber = rowNumber;
-    }
-    
-    public Error(String tag, int rowNumber) {
-        this.thisContent = tag;
-        this.rowNumber = rowNumber;
+        this.isClose = isClose;
     }
 
     public String getThisContent() {
@@ -30,14 +26,6 @@ public class Error {
 
     public void setThisContent(String thisContent) {
         this.thisContent = thisContent;
-    }
-
-    public String getMissingContent() {
-        return missingContent;
-    }
-
-    public void setMissingContent(String missingContent) {
-        this.missingContent = missingContent;
     }
 
     public int getRowNumber() {
@@ -50,11 +38,9 @@ public class Error {
 
     @Override
     public String toString() {
-        return "Error at line: " + rowNumber +
-                "\nFound </" +thisContent+ "> without closing </" +missingContent+ ">";
-    }
-    
-    public String toString(boolean check) {
-        return "Error at line: " + rowNumber + "\nMiss closing tag: </" + thisContent + ">";
+        if (isClose) {
+            return "Error at row: " +rowNumber+ "\nMissing close tag of <" +thisContent+ ">";
+        }
+        return "Error at row: " +rowNumber+ "\nMissing open tag of </" +thisContent+ ">";
     }
 }

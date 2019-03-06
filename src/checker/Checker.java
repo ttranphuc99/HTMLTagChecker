@@ -22,16 +22,22 @@ import java.util.regex.Pattern;
 public class Checker {
 
     private String fileName;
+    private Stack<String> stack;
+    private ArrayList<Error> result;
 
     public Checker(String fileName) {
         this.fileName = fileName;
+        this.stack = new Stack<>();
+        result = new ArrayList<>();
+    }
+    
+    private void tranverseStack(Stack<String> s1, Stack<String> s2) {
+        while (!s1.isEmpty()) {
+            s2.push(s1.pop());
+        }
     }
 
     public ArrayList<Error> check() {
-        ArrayList<Error> result = null;
-
-        //use a stack to check
-        Stack<String> stack = new Stack<>();
 
         //open file and read a line until end of file
         File f = null;
@@ -44,7 +50,7 @@ public class Checker {
             br = new BufferedReader(fr);
 
             result = new ArrayList<>();
-            
+
             //use regex to get content of a tag, and put it in a stack
             String regex = "\\<(.*?)\\>";
             Pattern p = Pattern.compile(regex);
@@ -52,10 +58,10 @@ public class Checker {
 
             String str;
             String tagContent = "";
-            String popContent;
+            String popContent = "";
             int line = 0;
             while ((str = br.readLine()) != null) {
-                System.out.println("Line" + (line+1) + ": " + str);
+                System.out.println("Line" + (line + 1) + ": " + str);
                 line++;
                 m = p.matcher(str);
 
@@ -63,17 +69,41 @@ public class Checker {
                     tagContent = m.group(1).trim().split(" ")[0].toLowerCase();
                     if (tagContent.charAt(0) == '/') {
                         tagContent = tagContent.substring(1);
-                        popContent = stack.pop();
-//                            System.out.println("Push: " + popContent);
-
-                        //check
-                        if (!popContent.equals(tagContent)) {
-                            Error error = new Error(tagContent, popContent, line);
-                            result.add(error);
-//                            stack.push(popContent);
+                        if (!stack.isEmpty()) {
+                            popContent = stack.pop();
+                            //check
+                            if (!popContent.equals(tagContent)) {
+                                Stack<String> tStack = new Stack<>();
+                                tStack.push(popContent);
+                                while (!stack.isEmpty()) {
+                                    String tPopContent = stack.pop();
+                                    tStack.push(tPopContent);
+                                    if (tPopContent.equals(tagContent)) {
+                                        tStack.pop();
+                                        Stack<String> tStack2 = new Stack<>();
+                                        tranverseStack(tStack, tStack2);
+                                        while (!tStack2.isEmpty()) {
+                                            String pop = tStack2.pop();
+                                            Error e = new Error(pop, line, true);
+                                            result.add(e);
+                                        }
+                                        break;
+                                    }
+                                }
+                                if (stack.isEmpty()) {
+                                    Error e = new Error(tagContent, line, false);
+                                    result.add(e);
+                                    while (!tStack.isEmpty()) {
+                                        stack.push(tStack.pop());
+                                    }
+                                }
+                            }
+                        } else {
+                            Error e = new Error(tagContent, line, false);
+                            result.add(e);
                         }
+
                     } else {
-//                            System.out.println("Pop: " + tagContent);
                         stack.push(tagContent);
                     }
                 }
@@ -81,7 +111,7 @@ public class Checker {
             if (!stack.isEmpty()) {
                 do {
                     String tag = stack.pop();
-                    Error e = new Error(tag, line);
+                    Error e = new Error(tag, line, true);
                     result.add(e);
                 } while (!stack.isEmpty());
             }
